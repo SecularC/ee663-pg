@@ -1,0 +1,7 @@
+../Core/Src/channel_task.c:52:5:channel_task_init	24	static
+../Core/Src/channel_task.c:58:13:channel_task	72	static
+../Core/Src/channel_task.c:182:6:generate_DC	32	static
+../Core/Src/channel_task.c:213:6:generate_rectangle	40	static
+../Core/Src/channel_task.c:253:6:generate_sine	56	static
+../Core/Src/channel_task.c:284:6:generate_triangular	48	static
+../Core/Src/channel_task.c:321:6:generate_arbitrary	24	static

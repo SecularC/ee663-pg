@@ -1,0 +1,7 @@
+channel_task.c:52:5:channel_task_init	1
+channel_task.c:58:13:channel_task	15
+channel_task.c:182:6:generate_DC	5
+channel_task.c:213:6:generate_rectangle	7
+channel_task.c:253:6:generate_sine	5
+channel_task.c:284:6:generate_triangular	8
+channel_task.c:321:6:generate_arbitrary	5

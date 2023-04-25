@@ -36,10 +36,11 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include "receive_task.h"
-#include <channel_task.h>
+#include "channel_task.h"
 #include "task.h"
 #include "app.h"
 #include "queue.h"
+#include "ring.h"
 #include <ctype.h>
 /* USER CODE END Includes */
 

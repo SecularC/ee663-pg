@@ -1,0 +1,4 @@
+../Core/Src/uart.c:25:7:USART_getline	16	static
+../Core/Src/uart.c:58:6:USART_Write	32	static
+../Core/Src/uart.c:72:9:USART_Read	16	static
+../Core/Src/uart.c:89:6:HAL_UART_RxCpltCallback	16	static

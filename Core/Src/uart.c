@@ -6,38 +6,47 @@
  */
 #include "uart.h"
 
-static int index;
-int uart_index = 0;
+
+int uart2_index = 0;
+int uart3_index = 0;
+uint8_t uart3_line_flag = 0;
 int n;
-uint8_t rxByte;
-uint8_t rxBuffer[UART_BUFFER_SIZE];
-uint8_t txBuffer[UART_BUFFER_SIZE];
+uint8_t rxByte2; //char and buffer for USART2
+uint8_t rxBuffer2[UART_BUFFER_SIZE];
+uint8_t txBuffer2[UART_BUFFER_SIZE];
 uint8_t rxBytePnt;
+
+
+
+uint8_t rxByte3; //char and buffer for USART3
+uint8_t rxBuffer3[UART_BUFFER_SIZE];
+uint8_t txBuffer3[UART_BUFFER_SIZE];
 
 _Bool USART_getline(USART_TypeDef * USARTx)
 {
-	rxByte = USART_Read(USARTx);
-	if(rxByte != 255)
+	rxByte2 = USART_Read(USARTx);
+	//if character isn't null
+	if(rxByte2 != 255)
 	{
-		if(rxByte == '\r')
+		if(rxByte2 == '\r')
 		{
-			n = sprintf((char *)txBuffer, "\r\n");
-			USART_Write(USART2, txBuffer, n);
-			uart_index = 0;
+			n = sprintf((char *)txBuffer2, "\r\n");
+			USART_Write(USART2, txBuffer2, n);
+			uart2_index = 0;
 			return 1;
 		}
-		else if(rxByte == '\177'){
-			if(uart_index > 0)
+		else if(rxByte2 == '\177'){
+			if(uart2_index > 0)
 			{
-				rxBuffer[uart_index - 1] = '\0';
-				uart_index --;
+				rxBuffer2[uart2_index - 1] = '\0';
+				uart2_index --;
 			}
 			//USART_Write(USARTx, '\r\n');
 			return 0;
 		}
-		else if(uart_index < UART_BUFFER_SIZE){
-			rxBuffer[uart_index] = rxByte;
-			uart_index++;
+		else if(uart2_index < UART_BUFFER_SIZE){
+			rxBuffer2[uart2_index] = rxByte2;
+			uart2_index++;
        	    return 0;
 		}
 	}else{
@@ -69,9 +78,38 @@ uint8_t USART_Read (USART_TypeDef * USARTx) {
 		// Reading USART_DR automatically clears the RXNE flag
 		//USART_Write(USARTx, (uint8_t)(USARTx->RDR & 0xFF));
 		rxBytePnt = ((uint8_t)(USARTx->RDR & 0xFF));
-		n = sprintf((char *)txBuffer, "%c", rxBytePnt);
- 		USART_Write(USART2, txBuffer, n);
+		n = sprintf((char *)txBuffer2, "%c", rxBytePnt);
+ 		USART_Write(USART2, txBuffer2, n);
 		//HAL_UART_Transmit(USARTx, (uint8_t*)&rxBytePnt, sizeof(rxBytePnt), 1);
 		return rxBytePnt;
 	}
+}
+
+//interrupt handler for USART3
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	//if character isn't null
+	if(rxByte3 != 255)
+	{
+		if(rxByte3 == '\r')
+		{
+			n = sprintf((char *)txBuffer3, "\r\n");
+			USART_Write(USART3, txBuffer3, n);
+			uart3_index = 0;
+			uart3_line_flag = 0;
+		}
+		else if(rxByte3 == '\177'){
+			if(uart3_index > 0)
+			{
+				rxBuffer3[uart3_index - 1] = '\0';
+				uart3_index --;
+			}
+			//USART_Write(USARTx, '\r\n');
+		}
+		else if(uart3_index < UART_BUFFER_SIZE){
+			rxBuffer3[uart3_index] = rxByte3;
+			uart3_index++;
+		}
+	}
+	HAL_UART_Receive_IT(huart, (uint8_t *)rxByte3, 1);
 }

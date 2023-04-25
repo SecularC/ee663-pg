@@ -10,8 +10,10 @@ uint8_t userMsg[200]; //extern to send message to uart.c
 int msgSize;
 COMMAND_c cmd;
 
-extern uint8_t rxBuffer[UART_BUFFER_SIZE];
+extern uint8_t rxBuffer2[UART_BUFFER_SIZE];
 extern QueueHandle_t cmd_queue;
+extern UART_HandleTypeDef huart3;
+
 static void receive_task(void *params);
 static int print_command(COMMAND_c * c_print);
 
@@ -20,7 +22,7 @@ int receive_task_init(void)
 {
 	COMMAND_c * c = &cmd;
 	memset(c, 0, sizeof(COMMAND_c));
-	BaseType_t err = xTaskCreate(receive_task, "ReceiveTask", 1024, &cmd, 1, NULL);
+	BaseType_t err = xTaskCreate(receive_task, "Receive_Task", 1024, &cmd, 1, NULL);
 	assert(err == pdPASS);
 	return 0;
 }
@@ -35,11 +37,11 @@ static void receive_task(void *params){
 		if(USART_getline(USART2))
 		{
 			//read in command and calculate min and max DAC values required
-			sscanf((char *)rxBuffer, "%s %u %c %f %f %f %u", c->name, &(c->channel), &(c->type), &(c->freq), &minv, &maxv, &(c->noise));
+			sscanf((char *)rxBuffer2, "%s %u %c %f %f %f %u", c->name, &(c->channel), &(c->type), &(c->freq), &minv, &maxv, &(c->noise));
 			c->dac_minv = (float) (4095/3.3) * minv;
 			c->dac_maxv = (float) (4095/3.3) * maxv;
 
-			memset(rxBuffer, '\0', sizeof(rxBuffer)); //reset buffer to all null terminators
+			memset(rxBuffer2, '\0', sizeof(rxBuffer2)); //reset buffer to all null terminators
 			BaseType_t err = xQueueSendToFront(cmd_queue, &c, 0);
 			assert(err == pdPASS);
 			//send command to the queue if command is okay
@@ -89,6 +91,10 @@ static int print_command(COMMAND_c * c_print)
 		case 'c':
 			msgSize = sprintf((char *)userMsg, "Printing Copied Signal\r\n");
 			USART_Write(USART2, userMsg, msgSize);
+			msgSize = sprintf((char *)userMsg, "Number of Samples Per Waveform: %u\r\n", ADC_LUT_SIZE);
+			USART_Write(USART2, userMsg, msgSize);
+			msgSize = sprintf((char *)userMsg, "Update Rate: 10000Hz\r\n");
+			return(1);
 			return(1);
 		default:
 			//return error if wave type is not valid

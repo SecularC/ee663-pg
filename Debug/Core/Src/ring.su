@@ -1,0 +1,2 @@
+../Core/Src/ring.c:18:5:ring_task_init	32	static
+../Core/Src/ring.c:39:13:ring_task	104	static

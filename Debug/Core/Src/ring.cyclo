@@ -1,0 +1,2 @@
+ring.c:18:5:ring_task_init	2
+ring.c:39:13:ring_task	4
