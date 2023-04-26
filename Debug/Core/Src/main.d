@@ -46,7 +46,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/app.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
- ../Core/Inc/ring.h \
+ ../Core/Inc/ring.h ../Core/Inc/MFS.h \
+ ../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
@@ -104,6 +105,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../Core/Inc/ring.h:
+../Core/Inc/MFS.h:
+../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:

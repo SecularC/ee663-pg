@@ -19,5 +19,6 @@ void app_init(void)
 	USART_Write(USART2, userMsg, msgSize);
 	receive_task_init();
 	channel_task_init();
+	ring_task_init();
 	cmd_queue = xQueueCreate(99, sizeof(COMMAND_c));
 }

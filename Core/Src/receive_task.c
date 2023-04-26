@@ -8,12 +8,13 @@
 #include "main.h"
 uint8_t userMsg[200]; //extern to send message to uart.c
 int msgSize;
-COMMAND_c cmd;
 
+
+extern uint8_t txBuffer2[UART_BUFFER_SIZE];
 extern uint8_t rxBuffer2[UART_BUFFER_SIZE];
-extern QueueHandle_t cmd_queue;
 extern UART_HandleTypeDef huart3;
-
+extern uint8_t rxByte3; //char and buffer for USART3
+extern RING_r ring;
 static void receive_task(void *params);
 static int print_command(COMMAND_c * c_print);
 
@@ -28,31 +29,15 @@ int receive_task_init(void)
 }
 
 static void receive_task(void *params){
-	COMMAND_c *c = (COMMAND_c *)params;
-	float minv; //stores the min/max voltages
-	float maxv;
+	memset(txBuffer2, '\0', sizeof(txBuffer2));
 	while(1)
 	{
 		//check for a completed line
 		if(USART_getline(USART2))
 		{
-			//read in command and calculate min and max DAC values required
-			sscanf((char *)rxBuffer2, "%s %u %c %f %f %f %u", c->name, &(c->channel), &(c->type), &(c->freq), &minv, &maxv, &(c->noise));
-			c->dac_minv = (float) (4095/3.3) * minv;
-			c->dac_maxv = (float) (4095/3.3) * maxv;
 
-			memset(rxBuffer2, '\0', sizeof(rxBuffer2)); //reset buffer to all null terminators
-			BaseType_t err = xQueueSendToFront(cmd_queue, &c, 0);
-			assert(err == pdPASS);
-			//send command to the queue if command is okay
-			if(print_command(c))
-			{
-				BaseType_t err = xQueueSendToFront(cmd_queue, &c, 0);
-				assert(err == pdPASS);
-			} else{
-				msgSize = sprintf((char *)userMsg, "Command Error!\r\n");
-				USART_Write(USART2, userMsg, msgSize);
-			}
+			msgSize = sprintf((char *)txBuffer2, "%s %s\n", ring.ringID, rxBuffer2);
+			HAL_UART_Transmit_IT(&huart3, txBuffer2, msgSize);
 		}
 		vTaskDelay(1);
 	}

@@ -6,12 +6,19 @@
  */
 
 #include "main.h"
-extern uint8_t userMsg[200]; //extern to send message to uart.c
+extern uint8_t txBuffer2[UART_BUFFER_SIZE]; //extern to send message to uart.c
+extern uint8_t txBuffer3[UART_BUFFER_SIZE]; //extern to send message to uart.c
 extern UART_HandleTypeDef huart3;
 extern uint8_t rxBuffer2[UART_BUFFER_SIZE];
 extern uint8_t rxBuffer3[UART_BUFFER_SIZE];
 extern uint8_t uart3_line_flag;
+extern uint8_t rxByte3; //char and buffer for USART3
+
+COMMAND_c cmd;
+extern QueueHandle_t cmd_queue;
 RING_r ring;
+
+const char *pc_r = "Ring\n";
 
 static void ring_task(void* params);
 
@@ -23,16 +30,19 @@ int ring_task_init(void)
 	memset(r, 0, sizeof(RING_r));
 
 	//prompt for source ID
-	msgSize = sprintf((char *)userMsg, "Enter source name (letters only):\r\n");
-	USART_Write(USART2, userMsg, msgSize);
+	msgSize = sprintf((char *)txBuffer2, "Enter source name (letters only):\r\n");
+	USART_Write(USART2, txBuffer2, msgSize);
 
 	//wait until a user name is entered
 	while(!USART_getline(USART2));
 	sscanf((char *)rxBuffer2, "%s", r->ringID);
 
 	//create ring task
-	BaseType_t err = xTaskCreate(ring_task, "Ring_Task", 1024, (void *) r, 2, NULL);
+	BaseType_t err = xTaskCreate(ring_task, "Ring_Task", 1024, (void *) r, 3, NULL);
 	assert(err == pdPASS);
+
+	//enable interrupt
+	HAL_UART_Receive_IT(&huart3, (uint8_t *)rxByte3, 1);
 	return 0;
 }
 
@@ -42,6 +52,12 @@ static void ring_task(void* params){
 	char cap_cmd[] = "cap\0";
 	char msg_cmd[] = "msg\0";
 	char led_cmd[] = "led\0";
+	char on[] = "on\0";
+	char off[] = "off\0";
+	int msgSize;
+
+	//enable HAL UART interrupts
+	HAL_UART_Receive_IT(&huart3, &rxByte3, 1);
 	while(1)
 	{
 		//if flag is raised (UART3 has received a line
@@ -53,12 +69,64 @@ static void ring_task(void* params){
 			//check if destination ID matches ring ID
 			if(strcmp((char *) r->destID, (char *) r->ringID) == 0)
 			{
+				//received command
+				msgSize = sprintf((char *)txBuffer2, "Received command: %s\r\n", r->command);
+				USART_Write(USART2, txBuffer2, msgSize);
 				//if command matches gen or cap
 				if((strcmp((char *) r->command, gen_cmd) == 0) || strcmp((char *) r->destID, cap_cmd) == 0)
 				{
 
 				}
+
+				//if received command is msg, print out message
+				if((strcmp((char *) r->command, msg_cmd) == 0))
+				{
+					msgSize = sprintf((char *)txBuffer2, "%s: %s\r\n", r->sourceID, r->param_1);
+					USART_Write(USART2, txBuffer2, msgSize);
+				}
+
+				//if received command is LED, turn on LED
+				if((strcmp((char *) r->command, led_cmd) == 0))
+				{
+					msgSize = sprintf((char *)txBuffer2, "%s: LED %s turned %s\r\n", r->sourceID, r->param_1, r->param_2);
+					USART_Write(USART2, txBuffer2, msgSize);
+					if((strcmp((char *) r->param_2, on) == 0))
+					{
+						int led = atoi(r->param_1);
+						MFS_set_led(led, 1);
+					}else if((strcmp((char *) r->param_2, on) == 0))
+					{
+						int led = atoi(r->param_1);
+						MFS_set_led(led, 0);
+					}
+				}
+			} else{
+				//if not intended destination, send message out
+				USART_Write(USART3, rxBuffer3, sizeof(rxBuffer3));
 			}
+			uart3_line_flag = 0;
+			memset(rxBuffer3, '\0', sizeof(rxBuffer3)); //reset buffer to all null terminators
 		}
+
+		vTaskDelay(1);
 	}
+	/*
+	//read in command and calculate min and max DAC values required
+				sscanf((char *)rxBuffer2, "%s %u %c %f %f %f %u", c->name, &(c->channel), &(c->type), &(c->freq), &minv, &maxv, &(c->noise));
+				c->dac_minv = (float) (4095/3.3) * minv;
+				c->dac_maxv = (float) (4095/3.3) * maxv;
+
+				memset(rxBuffer2, '\0', sizeof(rxBuffer2)); //reset buffer to all null terminators
+				BaseType_t err = xQueueSendToFront(cmd_queue, &c, 0);
+				assert(err == pdPASS);
+				//send command to the queue if command is okay
+				if(print_command(c))
+				{
+					BaseType_t err = xQueueSendToFront(cmd_queue, &c, 0);
+					assert(err == pdPASS);
+				} else{
+					msgSize = sprintf((char *)userMsg, "Command Error!\r\n");
+					USART_Write(USART2, userMsg, msgSize);
+				}
+	*/
 }

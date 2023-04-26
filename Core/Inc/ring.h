@@ -18,7 +18,7 @@ typedef struct {
 	unsigned char command[10];
 
 	//params for commands
-	unsigned char param_1[10];
+	unsigned char param_1[50]; //longer for the message
 	unsigned char param_2[10];
 	unsigned char param_3[10];
 	unsigned char param_4[10];

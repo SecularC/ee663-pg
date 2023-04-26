@@ -6,6 +6,7 @@
  */
 #include "uart.h"
 
+extern UART_HandleTypeDef huart3;
 
 int uart2_index = 0;
 int uart3_index = 0;
@@ -15,7 +16,6 @@ uint8_t rxByte2; //char and buffer for USART2
 uint8_t rxBuffer2[UART_BUFFER_SIZE];
 uint8_t txBuffer2[UART_BUFFER_SIZE];
 uint8_t rxBytePnt;
-
 
 
 uint8_t rxByte3; //char and buffer for USART3
@@ -88,28 +88,29 @@ uint8_t USART_Read (USART_TypeDef * USARTx) {
 //interrupt handler for USART3
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	//if character isn't null
-	if(rxByte3 != 255)
-	{
-		if(rxByte3 == '\r')
+	//if character isn't null and if USART3 was triggered.
+	if(huart == &huart3){
+		if(rxByte3 != 255)
 		{
-			n = sprintf((char *)txBuffer3, "\r\n");
-			USART_Write(USART3, txBuffer3, n);
-			uart3_index = 0;
-			uart3_line_flag = 0;
-		}
-		else if(rxByte3 == '\177'){
-			if(uart3_index > 0)
+			if(rxByte3 == '\n')
 			{
-				rxBuffer3[uart3_index - 1] = '\0';
-				uart3_index --;
+				rxBuffer3[uart3_index] = rxByte3;
+				uart3_index = 0;
+				uart3_line_flag = 1;
 			}
-			//USART_Write(USARTx, '\r\n');
-		}
-		else if(uart3_index < UART_BUFFER_SIZE){
-			rxBuffer3[uart3_index] = rxByte3;
-			uart3_index++;
+			else if(rxByte3 == '\177'){
+				if(uart3_index > 0)
+				{
+					rxBuffer3[uart3_index - 1] = '\0';
+					uart3_index --;
+				}
+				//USART_Write(USARTx, '\r\n');
+			}
+			else if(uart3_index < UART_BUFFER_SIZE){
+				rxBuffer3[uart3_index] = rxByte3;
+				uart3_index++;
+			}
 		}
 	}
-	HAL_UART_Receive_IT(huart, (uint8_t *)rxByte3, 1);
+	HAL_UART_Receive_IT(huart, &rxByte3, 1);
 }

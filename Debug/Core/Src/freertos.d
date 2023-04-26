@@ -46,7 +46,8 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
  ../Core/Inc/app.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
- ../Core/Inc/ring.h
+ ../Core/Inc/ring.h ../Core/Inc/MFS.h \
+ ../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h
 ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
 ../Core/Inc/FreeRTOSConfig.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
@@ -98,3 +99,5 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
 ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../Core/Inc/ring.h:
+../Core/Inc/MFS.h:
+../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h:

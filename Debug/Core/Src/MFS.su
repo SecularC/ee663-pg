@@ -1,0 +1,4 @@
+../Core/Src/MFS.c:40:13:gpio_config_output	24	static
+../Core/Src/MFS.c:65:6:MFS_init	16	static
+../Core/Src/MFS.c:78:6:MFS_set_led	24	static
+../Core/Src/MFS.c:92:6:MFS_toggle_led	24	static

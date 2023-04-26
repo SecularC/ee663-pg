@@ -1,3 +1,4 @@
+"./Core/Src/MFS.o"
 "./Core/Src/app.o"
 "./Core/Src/channel_task.o"
 "./Core/Src/freertos.o"
