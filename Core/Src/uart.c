@@ -6,6 +6,7 @@
  */
 #include "uart.h"
 
+extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
 int uart2_index = 0;
@@ -92,11 +93,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart == &huart3){
 		if(rxByte3 != 255)
 		{
-			if(rxByte3 == '\n')
+			if(rxByte3 == '\r')
 			{
 				rxBuffer3[uart3_index] = rxByte3;
 				uart3_index = 0;
-				uart3_line_flag = 1;
+				uart3_line_flag = 1; //don't recall interrupt
 			}
 			else if(rxByte3 == '\177'){
 				if(uart3_index > 0)
@@ -104,13 +105,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 					rxBuffer3[uart3_index - 1] = '\0';
 					uart3_index --;
 				}
+				HAL_UART_Receive_IT(huart, &rxByte3, 1);
 				//USART_Write(USARTx, '\r\n');
 			}
 			else if(uart3_index < UART_BUFFER_SIZE){
 				rxBuffer3[uart3_index] = rxByte3;
 				uart3_index++;
+				HAL_UART_Receive_IT(huart, &rxByte3, 1);
 			}
 		}
 	}
-	HAL_UART_Receive_IT(huart, &rxByte3, 1);
+	//if uart2 triggered and line flag has not been raised
+	if((huart == &huart2) && !uart3_line_flag){
+		HAL_UART_Receive_IT(huart, &rxByte3, 1);
+	}
 }

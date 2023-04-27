@@ -13,7 +13,7 @@ typedef struct {
 	unsigned char name[5];
 	int channel;
 	unsigned char type;
-	float freq;
+	double freq;
 	uint16_t dac_minv;
 	uint16_t dac_maxv;
 	int noise;

@@ -18,6 +18,7 @@ typedef struct {
 	unsigned char command[10];
 
 	//params for commands
+	unsigned char params[50]; //longer for the message
 	unsigned char param_1[50]; //longer for the message
 	unsigned char param_2[10];
 	unsigned char param_3[10];
@@ -30,5 +31,6 @@ typedef struct {
 extern RING_r ring;
 
 int ring_task_init(void);
+void parse_channel_cmd(RING_r * r);
 
 #endif /* INC_RING_H_ */

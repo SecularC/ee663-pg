@@ -51,7 +51,7 @@ static void channel_task(void *params);
 //creates task to take in gen commands
 int channel_task_init(){
 	//create task
-	BaseType_t err = xTaskCreate(channel_task, "Channel_Task", 1024, (void *) pc_ch, 2, NULL);
+	BaseType_t err = xTaskCreate(channel_task, "Channel_Task", 1024, (void *) pc_ch, 3, NULL);
 	assert(err == pdPASS);
 	return 0;
 }

@@ -35,9 +35,10 @@ static void receive_task(void *params){
 		//check for a completed line
 		if(USART_getline(USART2))
 		{
-
-			msgSize = sprintf((char *)txBuffer2, "%s %s\n", ring.ringID, rxBuffer2);
+			//append source ID and write to USART3
+			msgSize = sprintf((char *)txBuffer2, "%s %s\r", ring.ringID, rxBuffer2);
 			HAL_UART_Transmit_IT(&huart3, txBuffer2, msgSize);
+			memset(rxBuffer2, '\0',  sizeof(rxBuffer2));
 		}
 		vTaskDelay(1);
 	}

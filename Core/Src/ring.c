@@ -38,11 +38,12 @@ int ring_task_init(void)
 	sscanf((char *)rxBuffer2, "%s", r->ringID);
 
 	//create ring task
-	BaseType_t err = xTaskCreate(ring_task, "Ring_Task", 1024, (void *) r, 3, NULL);
+	BaseType_t err = xTaskCreate(ring_task, "Ring_Task", 1024, (void *) r, 2, NULL);
 	assert(err == pdPASS);
 
+	MFS_init();
 	//enable interrupt
-	HAL_UART_Receive_IT(&huart3, (uint8_t *)rxByte3, 1);
+	HAL_UART_Receive_IT(&huart3, &rxByte3, 1);
 	return 0;
 }
 
@@ -55,7 +56,7 @@ static void ring_task(void* params){
 	char on[] = "on\0";
 	char off[] = "off\0";
 	int msgSize;
-
+	unsigned char temp_ringID[10];
 	//enable HAL UART interrupts
 	HAL_UART_Receive_IT(&huart3, &rxByte3, 1);
 	while(1)
@@ -72,10 +73,11 @@ static void ring_task(void* params){
 				//received command
 				msgSize = sprintf((char *)txBuffer2, "Received command: %s\r\n", r->command);
 				USART_Write(USART2, txBuffer2, msgSize);
+				memset(txBuffer2, '\0', sizeof(txBuffer2)); //reset buffer to all null terminators
 				//if command matches gen or cap
 				if((strcmp((char *) r->command, gen_cmd) == 0) || strcmp((char *) r->destID, cap_cmd) == 0)
 				{
-
+					parse_channel_cmd(r);
 				}
 
 				//if received command is msg, print out message
@@ -94,7 +96,7 @@ static void ring_task(void* params){
 					{
 						int led = atoi(r->param_1);
 						MFS_set_led(led, 1);
-					}else if((strcmp((char *) r->param_2, on) == 0))
+					}else if((strcmp((char *) r->param_2, off) == 0))
 					{
 						int led = atoi(r->param_1);
 						MFS_set_led(led, 0);
@@ -102,10 +104,22 @@ static void ring_task(void* params){
 				}
 			} else{
 				//if not intended destination, send message out
-				USART_Write(USART3, rxBuffer3, sizeof(rxBuffer3));
+				msgSize = sprintf((char *)txBuffer2, "Not intended target\r\n");
+				USART_Write(USART2, txBuffer2, msgSize);
+				//USART_Write(USART3, rxBuffer3, sizeof(rxBuffer3));
 			}
 			uart3_line_flag = 0;
 			memset(rxBuffer3, '\0', sizeof(rxBuffer3)); //reset buffer to all null terminators
+			memset(txBuffer2, '\0', sizeof(txBuffer2)); //reset buffer to all null terminators
+
+			//store ring ID and clear ring command
+			// copying ring ID to temporary
+			strcpy((char*)temp_ringID, (char*) r->ringID);
+			memset(r, '\0', sizeof(RING_r));
+			strcpy((char*) r->ringID, (char*)temp_ringID);
+
+			//enable interrupt
+			HAL_UART_Receive_IT(&huart3, &rxByte3, 1);
 		}
 
 		vTaskDelay(1);
@@ -129,4 +143,25 @@ static void ring_task(void* params){
 					USART_Write(USART2, userMsg, msgSize);
 				}
 	*/
+}
+
+//Use ring command parameters to create command for channel tasks
+void parse_channel_cmd(RING_r * r)
+{
+	double minv, maxv;
+	COMMAND_c * c = &cmd;
+	memset(c, 0, sizeof(COMMAND_c));
+	strcpy((char*) c->name, (char*) r->command);
+	c->channel = atoi((char *)r->param_1);
+	c->type = (unsigned char) r->param_2[0];
+	c->freq = atof((char *)r->param_3);
+
+	minv = atof((char *)r->param_4);
+	maxv = atof((char *)r->param_5);
+	c->dac_minv = (float) (4095/3.3) * minv;
+	c->dac_maxv = (float) (4095/3.3) * maxv;
+
+	c->noise = atoi((char *)r->param_6);
+	BaseType_t err = xQueueSendToFront(cmd_queue, &c, 0);
+	assert(err == pdPASS);
 }

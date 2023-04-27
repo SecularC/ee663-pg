@@ -43,6 +43,8 @@ extern "C" {
 #include "ring.h"
 #include "MFS.h"
 #include <ctype.h>
+#include <stdlib.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
