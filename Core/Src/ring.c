@@ -6,8 +6,8 @@
  */
 
 #include "main.h"
-extern uint8_t txBuffer2[UART_BUFFER_SIZE]; //extern to send message to uart.c
-extern uint8_t txBuffer3[UART_BUFFER_SIZE]; //extern to send message to uart.c
+extern uint8_t txBuffer2[UART_BUFFER_SIZE+1]; //extern to send message to uart.c
+extern uint8_t txBuffer3[UART_BUFFER_SIZE+1]; //extern to send message to uart.c
 extern UART_HandleTypeDef huart3;
 extern uint8_t rxBuffer2[UART_BUFFER_SIZE];
 extern uint8_t rxBuffer3[UART_BUFFER_SIZE];
@@ -61,51 +61,56 @@ static void ring_task(void* params){
 	HAL_UART_Receive_IT(&huart3, &rxByte3, 1);
 	while(1)
 	{
-		//if flag is raised (UART3 has received a line
+		//if flag is raised (UART3 has received a line)
 		if(uart3_line_flag)
 		{
 			//read in command
 			sscanf((char *)rxBuffer3, "%s %s %s %s %s %s %s %s %s", r->sourceID, r->destID, r->command, r->param_1, r->param_2, r->param_3, r->param_4, r->param_5, r->param_6);
 
 			//check if destination ID matches ring ID
-			if(strcmp((char *) r->destID, (char *) r->ringID) == 0)
+			if(strcasecmp((char *) r->destID, (char *) r->ringID) == 0)
 			{
 				//received command
 				msgSize = sprintf((char *)txBuffer2, "Received command: %s\r\n", r->command);
 				USART_Write(USART2, txBuffer2, msgSize);
 				memset(txBuffer2, '\0', sizeof(txBuffer2)); //reset buffer to all null terminators
 				//if command matches gen or cap
-				if((strcmp((char *) r->command, gen_cmd) == 0) || strcmp((char *) r->destID, cap_cmd) == 0)
+				if((strcasecmp((char *) r->command, gen_cmd) == 0) || strcasecmp((char *) r->command, cap_cmd) == 0)
 				{
 					parse_channel_cmd(r);
 				}
 
 				//if received command is msg, print out message
-				if((strcmp((char *) r->command, msg_cmd) == 0))
+				if((strcasecmp((char *) r->command, msg_cmd) == 0))
 				{
 					msgSize = sprintf((char *)txBuffer2, "%s: %s\r\n", r->sourceID, r->param_1);
 					USART_Write(USART2, txBuffer2, msgSize);
 				}
 
 				//if received command is LED, turn on LED
-				if((strcmp((char *) r->command, led_cmd) == 0))
+				if((strcasecmp((char *) r->command, led_cmd) == 0))
 				{
 					msgSize = sprintf((char *)txBuffer2, "%s: LED %s turned %s\r\n", r->sourceID, r->param_1, r->param_2);
 					USART_Write(USART2, txBuffer2, msgSize);
-					if((strcmp((char *) r->param_2, on) == 0))
+					if((strcasecmp((char *) r->param_2, on) == 0))
 					{
-						int led = atoi(r->param_1);
+						int led = atoi((const char*)r->param_1);
 						MFS_set_led(led, 1);
 					}else if((strcmp((char *) r->param_2, off) == 0))
 					{
-						int led = atoi(r->param_1);
+						int led = atoi((const char*)r->param_1);
 						MFS_set_led(led, 0);
 					}
 				}
 			} else{
-				//if not intended destination, send message out
-				msgSize = sprintf((char *)txBuffer2, "Not intended target\r\n");
-				USART_Write(USART2, txBuffer2, msgSize);
+				//if not the sender of the message, transmit it back
+				if((strcasecmp((char *) r->sourceID, (char *) r->ringID) != 0)){
+					//if not intended destination, send message out
+					msgSize = sprintf((char *)txBuffer2, "Not intended target\r\n");
+					USART_Write(USART2, txBuffer2, msgSize);
+					msgSize = sprintf((char *)txBuffer3, "%s\r", rxBuffer3);
+					HAL_UART_Transmit_IT(&huart3, txBuffer3, msgSize);
+				}
 				//USART_Write(USART3, rxBuffer3, sizeof(rxBuffer3));
 			}
 			uart3_line_flag = 0;

@@ -1,3 +1,3 @@
 ../Core/Src/ring.c:25:5:ring_task_init	32	static
 ../Core/Src/ring.c:50:13:ring_task	136	static
-../Core/Src/ring.c:149:6:parse_channel_cmd	48	static
+../Core/Src/ring.c:154:6:parse_channel_cmd	48	static

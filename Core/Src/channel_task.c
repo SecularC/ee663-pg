@@ -71,7 +71,7 @@ static void channel_task(void* params){
 			//receive pointer to command struct
 			BaseType_t rec_error = xQueueReceive(cmd_queue, &rec_cmd, 0);
 			assert(rec_error == pdPASS);
-			if(strcmp((char *) rec_cmd->name, gen_cmd) == 0)
+			if(strcasecmp((char *) rec_cmd->name, gen_cmd) == 0)
 			{
 				channel_sel = rec_cmd->channel;
 				noise_bits = rec_cmd->noise;
@@ -167,7 +167,7 @@ static void channel_task(void* params){
 					}
 					break;
 				}
-			} else if (strcmp((char *) rec_cmd->name, cap_cmd) == 0)
+			} else if (strcasecmp((char *) rec_cmd->name, cap_cmd) == 0)
 			{
 				TIM4->EGR |= TIM_EGR_UG;
 				HAL_TIM_Base_Start(&htim4);

@@ -1,3 +1,3 @@
 ring.c:25:5:ring_task_init	2
-ring.c:50:13:ring_task	9
-ring.c:149:6:parse_channel_cmd	1
+ring.c:50:13:ring_task	10
+ring.c:154:6:parse_channel_cmd	1

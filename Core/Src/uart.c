@@ -15,13 +15,13 @@ uint8_t uart3_line_flag = 0;
 int n;
 uint8_t rxByte2; //char and buffer for USART2
 uint8_t rxBuffer2[UART_BUFFER_SIZE];
-uint8_t txBuffer2[UART_BUFFER_SIZE];
+uint8_t txBuffer2[UART_BUFFER_SIZE+1];
 uint8_t rxBytePnt;
 
 
 uint8_t rxByte3; //char and buffer for USART3
 uint8_t rxBuffer3[UART_BUFFER_SIZE];
-uint8_t txBuffer3[UART_BUFFER_SIZE];
+uint8_t txBuffer3[UART_BUFFER_SIZE+1];
 
 _Bool USART_getline(USART_TypeDef * USARTx)
 {
@@ -93,7 +93,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart == &huart3){
 		if(rxByte3 != 255)
 		{
-			if(rxByte3 == '\r')
+			if(rxByte3 == '\n')
 			{
 				rxBuffer3[uart3_index] = rxByte3;
 				uart3_index = 0;
